@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-farm",
+      "description": "A beautiful green potato field at sunrise",
+      "imageUrl": "https://picsum.photos/seed/farm1/1200/800",
+      "imageHint": "potato field"
+    },
+    {
+      "id": "healthy-leaf",
+      "description": "A vibrant healthy green leaf",
+      "imageUrl": "https://picsum.photos/seed/leaf1/400/400",
+      "imageHint": "green leaf"
+    }
+  ]
+}

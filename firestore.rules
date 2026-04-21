@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset enforces a strict User-Ownership model. All data is hierarchically
+     * organized under a specific user's path to ensure clear security boundaries.
+     * 
+     * DATA STRUCTURE
+     * The primary data entity (Diagnostico) is nested within a user-specific
+     * subcollection: /users/{userId}/diagnosticos/{diagnosticoId}.
+     * 
+     * KEY SECURITY DECISIONS
+     * 1. Authorization Independence: By including the {userId} in the document path,
+     *    we avoid costly get() calls and ensure rules are high-performance.
+     * 2. Structural Segregation: User data is kept in private subcollections. Listing
+     *    is only permitted for the owner of that specific subcollection.
+     * 3. Prototyping Flexibility: While authorization (WHO can access) is strictly
+     *    enforced, data schema validation is kept minimal to allow for rapid iteration.
+     * 
+     * DENORMALIZATION FOR AUTHORIZATION
+     * The 'userId' is stored both in the path and as a field within the document.
+     * This allows for redundant checks and ensures that even if a document is 
+     * moved or queried, its ownership remains verifiable.
+     */
+
+    // --- Global Helper Functions ---
+
+    /**
+     * @description Checks if the request is made by an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user matches the provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is the owner and the document exists.
+     * Used for state-changing operations like update and delete.
+     */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the root user document.
+     * @path /users/{userId}
+     * @allow (get, create, update) if the authenticated user's UID matches {userId}.
+     * @deny (list) to prevent user enumeration.
+     * @principle Restricts access to a user's own profile and prevents listing all users.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if false; // Profiles are typically not deleted by users in this app context.
+
+      /**
+       * @description Rules for plant disease diagnoses.
+       * @path /users/{userId}/diagnosticos/{diagnosticoId}
+       * @allow (get, list) if the user is the owner of the parent path.
+       * @allow (create) if the user is the owner and the internal 'userId' field matches the path.
+       * @allow (update) if the user is the owner and the 'userId' field remains immutable.
+       * @deny (all) if the authenticated user is not the owner of the path.
+       * @principle Enforces path-based ownership and relational integrity for diagnosis data.
+       */
+      match /diagnosticos/{diagnosticoId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) 
+          && request.resource.data.userId == userId;
+
+        allow update: if isExistingOwner(userId) 
+          && request.resource.data.userId == resource.data.userId;
+
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
