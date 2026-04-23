@@ -56,26 +56,31 @@ export function PlantScanner() {
       return;
     }
 
+    const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
     setIsAnalyzing(true);
     try {
       // 0. Verificar límite semanal (Plan Semilla: 3 análisis/semana)
-      const sieteDiasAtras = new Date();
-      sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 7);
-      
-      const q = query(
-        collection(db, 'users', user.uid, 'diagnosticos'),
-        where('fecha', '>=', Timestamp.fromDate(sieteDiasAtras))
-      );
-      
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.size >= 3) {
-        toast({
-          variant: "destructive",
-          title: "Límite semanal alcanzado",
-          description: "Has agotado tus 3 análisis semanales del Plan Semilla. ¡Pásate al Plan Cosecha para análisis ilimitados!",
-        });
-        setIsAnalyzing(false);
-        return;
+      // Los administradores se saltan este límite
+      if (!isAdmin) {
+        const sieteDiasAtras = new Date();
+        sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 7);
+
+        const q = query(
+          collection(db, 'users', user.uid, 'diagnosticos'),
+          where('fecha', '>=', Timestamp.fromDate(sieteDiasAtras))
+        );
+
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.size >= 3) {
+          toast({
+            variant: "destructive",
+            title: "Límite semanal alcanzado",
+            description: "Has agotado tus 3 análisis semanales del Plan Semilla. ¡Pásate al Plan Cosecha para análisis ilimitados!",
+          });
+          setIsAnalyzing(false);
+          return;
+        }
       }
 
       // 1. Convertir imagen a Base64 para la IA
@@ -91,14 +96,14 @@ export function PlantScanner() {
       const diagnosticoId = `${Date.now()}-${selectedImage.name.replace(/\s+/g, '_')}`;
       const storagePath = `users/${user.uid}/diagnosticos/${diagnosticoId}`;
       const storageRef = ref(storage, storagePath);
-      
+
       const uploadResult = await uploadBytes(storageRef, selectedImage);
       const imageUrl = await getDownloadURL(uploadResult.ref);
 
       // 4. Crear documento en Firestore
       const diagnosticosCollectionRef = collection(db, 'users', user.uid, 'diagnosticos');
       const newDocRef = doc(diagnosticosCollectionRef);
-      
+
       const diagnosisData = {
         userId: user.uid,
         imageUrl,
@@ -130,18 +135,18 @@ export function PlantScanner() {
         });
       }
 
-      toast({ 
-        title: "¡Análisis completado!", 
-        description: `${analysisResult.plantName}: ${analysisResult.detectedDisease}` 
+      toast({
+        title: "¡Análisis completado!",
+        description: `${analysisResult.plantName}: ${analysisResult.detectedDisease}`
       });
-      
+
       resetScanner();
     } catch (error: any) {
       console.error("Analysis error:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Error en el análisis", 
-        description: error.message || "Fallo al conectar con la IA de visión." 
+      toast({
+        variant: "destructive",
+        title: "Error en el análisis",
+        description: error.message || "Fallo al conectar con la IA de visión."
       });
     } finally {
       setIsAnalyzing(false);
@@ -153,7 +158,7 @@ export function PlantScanner() {
       <Card className="border-4 border-dashed border-primary/30 rounded-3xl overflow-hidden bg-white shadow-xl hover:border-primary/50 transition-colors">
         <CardContent className="p-0">
           {!previewUrl ? (
-            <div 
+            <div
               className="flex flex-col items-center justify-center p-12 text-center cursor-pointer hover:bg-primary/5 transition-all h-[400px]"
               onClick={() => fileInputRef.current?.click()}
             >
@@ -170,17 +175,17 @@ export function PlantScanner() {
           ) : (
             <div className="relative group">
               <div className="relative h-[450px] w-full">
-                <Image 
-                  src={previewUrl} 
-                  alt="Vista previa de la planta" 
-                  fill 
+                <Image
+                  src={previewUrl}
+                  alt="Vista previa de la planta"
+                  fill
                   className="object-cover"
                 />
               </div>
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                 <Button 
-                  variant="destructive" 
-                  size="lg" 
+                <Button
+                  variant="destructive"
+                  size="lg"
                   className="h-14 px-8 rounded-xl shadow-2xl font-bold"
                   onClick={resetScanner}
                   disabled={isAnalyzing}
@@ -194,16 +199,16 @@ export function PlantScanner() {
         </CardContent>
       </Card>
 
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileSelect} 
-        accept="image/*" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept="image/*"
+        className="hidden"
       />
 
       {previewUrl && (
-        <Button 
+        <Button
           className="w-full h-20 text-2xl font-bold rounded-2xl shadow-xl flex items-center justify-center gap-4 bg-accent text-accent-foreground hover:bg-accent/90 transform hover:scale-[1.02] transition-all"
           onClick={runAnalysis}
           disabled={isAnalyzing}
