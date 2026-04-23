@@ -3,7 +3,8 @@
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { LogOut, Sprout } from 'lucide-react';
+import { LogOut, Sprout, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 import { PlantScanner } from './plant-scanner';
 import { HistoryList } from './history-list';
 
@@ -27,10 +28,18 @@ export function Dashboard() {
           </div>
           <h1 className="text-3xl font-bold text-primary tracking-tight">VigilAgro</h1>
         </div>
-        <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2 text-lg font-medium text-muted-foreground hover:text-destructive transition-colors">
-          <LogOut className="w-5 h-5" />
-          <span>Salir</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/planes">
+            <Button variant="outline" className="flex items-center gap-2 font-medium">
+              <CreditCard className="w-4 h-4" />
+              <span>Ver Planes</span>
+            </Button>
+          </Link>
+          <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2 font-medium text-muted-foreground hover:text-destructive transition-colors">
+            <LogOut className="w-5 h-5" />
+            <span className="hidden sm:inline">Salir</span>
+          </Button>
+        </div>
       </header>
 
       <section aria-labelledby="scanner-title">

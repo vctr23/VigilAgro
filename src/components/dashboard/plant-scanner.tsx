@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera, Upload, Search, X, Loader2 } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import Link from 'next/link';
 import { useUser, useFirestore, useStorage, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { genPlantTreatmentAdvice } from '@/ai/flows/gen-ai-plant-treatment-advice-flow';
@@ -57,6 +58,26 @@ export function PlantScanner() {
 
     setIsAnalyzing(true);
     try {
+      // 0. Verificar límite semanal (Plan Semilla: 3 análisis/semana)
+      const sieteDiasAtras = new Date();
+      sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 7);
+      
+      const q = query(
+        collection(db, 'users', user.uid, 'diagnosticos'),
+        where('fecha', '>=', Timestamp.fromDate(sieteDiasAtras))
+      );
+      
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.size >= 3) {
+        toast({
+          variant: "destructive",
+          title: "Límite semanal alcanzado",
+          description: "Has agotado tus 3 análisis semanales del Plan Semilla. ¡Pásate al Plan Cosecha para análisis ilimitados!",
+        });
+        setIsAnalyzing(false);
+        return;
+      }
+
       // 1. Convertir imagen a Base64 para la IA
       const base64Image = await fileToBase64(selectedImage);
 
