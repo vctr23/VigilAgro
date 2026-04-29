@@ -29,7 +29,11 @@ const genPlantTreatmentAdvicePrompt = ai.definePrompt({
   name: 'genPlantTreatmentAdvicePrompt',
   input: { schema: PlantTreatmentAdviceInputSchema },
   output: { schema: PlantTreatmentAdviceOutputSchema },
-  prompt: "Soy un agricultor experimentado. Dame 3 consejos prácticos, realistas y actualizados para tratar la {{{enfermedadDetectada}}} en mi plantación de {{{nombrePlanta}}}. Usa un tono cercano y sencillo. IMPORTANTE: Devuelve únicamente texto plano. No utilices formato Markdown (como negritas, cursivas o símbolos de lista como asteriscos). Si necesitas enumerar, usa números normales (1., 2., 3.) y saltos de línea simples.",
+  config: {
+    maxOutputTokens: 150,
+    temperature: 0.7,
+  },
+  prompt: "Soy un agricultor experimentado. Dame 3 consejos MUY BREVES (máximo 15-20 palabras cada uno), prácticos y realistas para tratar la {{{enfermedadDetectada}}} en {{{nombrePlanta}}}. Usa un tono directo y sencillo. IMPORTANTE: Devuelve únicamente texto plano sin ningún tipo de formato Markdown (sin negritas, sin cursivas, sin asteriscos). Si necesitas enumerar, usa números normales (1., 2., 3.) y saltos de línea simples.",
 });
 
 const genPlantTreatmentAdviceFlow = ai.defineFlow(
