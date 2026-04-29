@@ -27,9 +27,6 @@ const diagnosePlantImagePrompt = ai.definePrompt({
   name: 'diagnosePlantImagePrompt',
   input: { schema: DiagnosePlantImageInputSchema },
   output: { schema: DiagnosePlantImageOutputSchema },
-  config: {
-    maxOutputTokens: 200,
-  },
   prompt: `Actúa como un experto fitopatólogo y botánico. 
 Analiza la siguiente imagen de una planta:
 1. Identifica la especie de la planta (nombre común en español).
@@ -46,10 +43,10 @@ const diagnosePlantImageFlow = ai.defineFlow(
     outputSchema: DiagnosePlantImageOutputSchema,
   },
   async (input) => {
-    const { output } = await diagnosePlantImagePrompt(input);
+    const { output } = await diagnosePlantImagePrompt(input, { config: { maxOutputTokens: 200 } });
     if (!output) {
       throw new Error('No se pudo analizar la imagen.');
     }
-    return output;
+    return { ...output };
   }
 );

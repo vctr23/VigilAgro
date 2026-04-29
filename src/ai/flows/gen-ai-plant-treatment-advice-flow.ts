@@ -29,11 +29,7 @@ const genPlantTreatmentAdvicePrompt = ai.definePrompt({
   name: 'genPlantTreatmentAdvicePrompt',
   input: { schema: PlantTreatmentAdviceInputSchema },
   output: { schema: PlantTreatmentAdviceOutputSchema },
-  config: {
-    maxOutputTokens: 150,
-    temperature: 0.7,
-  },
-  prompt: "Soy un agricultor experimentado. Dame 3 consejos MUY BREVES (máximo 15-20 palabras cada uno), prácticos y realistas para tratar la {{{enfermedadDetectada}}} en {{{nombrePlanta}}}. Usa un tono directo y sencillo. IMPORTANTE: Devuelve únicamente texto plano sin ningún tipo de formato Markdown (sin negritas, sin cursivas, sin asteriscos). Si necesitas enumerar, usa números normales (1., 2., 3.) y saltos de línea simples.",
+  prompt: "Soy un agricultor experimentado. Dame 3 consejos MUY BREVES (máximo 15-20 palabras cada uno), prácticos y realistas para tratar la {{enfermedadDetectada}} en {{nombrePlanta}}. Usa un tono directo y sencillo. IMPORTANTE: Devuelve únicamente texto plano sin ningún tipo de formato Markdown (sin negritas, sin cursivas, sin asteriscos). Si necesitas enumerar, usa números normales (1., 2., 3.) y saltos de línea simples.",
 });
 
 const genPlantTreatmentAdviceFlow = ai.defineFlow(
@@ -43,10 +39,15 @@ const genPlantTreatmentAdviceFlow = ai.defineFlow(
     outputSchema: PlantTreatmentAdviceOutputSchema,
   },
   async (input) => {
-    const { output } = await genPlantTreatmentAdvicePrompt(input);
+    const { output } = await genPlantTreatmentAdvicePrompt(input, { 
+      config: { 
+        maxOutputTokens: 150,
+        temperature: 0.7
+      } 
+    });
     if (!output) {
       throw new Error('Failed to generate treatment advice.');
     }
-    return output;
+    return { ...output };
   }
 );
