@@ -6,6 +6,9 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 export const metadata: Metadata = {
   title: 'VigilAgro - Cuidado Inteligente de Cultivos',
   description: 'Detecta enfermedades en tus plantas con IA y recibe consejos expertos.',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
