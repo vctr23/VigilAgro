@@ -39,12 +39,7 @@ const genPlantTreatmentAdviceFlow = ai.defineFlow(
     outputSchema: PlantTreatmentAdviceOutputSchema,
   },
   async (input) => {
-    const { output } = await genPlantTreatmentAdvicePrompt(input, { 
-      config: { 
-        maxOutputTokens: 150,
-        temperature: 0.7
-      } 
-    });
+    const { output } = await genPlantTreatmentAdvicePrompt(input);
     if (!output) {
       throw new Error('Failed to generate treatment advice.');
     }

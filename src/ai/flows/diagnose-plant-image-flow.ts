@@ -43,7 +43,7 @@ const diagnosePlantImageFlow = ai.defineFlow(
     outputSchema: DiagnosePlantImageOutputSchema,
   },
   async (input) => {
-    const { output } = await diagnosePlantImagePrompt(input, { config: { maxOutputTokens: 200 } });
+    const { output } = await diagnosePlantImagePrompt(input);
     if (!output) {
       throw new Error('No se pudo analizar la imagen.');
     }
